@@ -23,6 +23,9 @@ const fontFaces = `
   }
 `;
 
+// Check if running in browser environment to avoid Konva initialization issues
+const isBrowser = typeof window !== 'undefined';
+
 const CardGenerator: React.FC = () => {
   // Constants from original implementation
   const cardWidth = 750;
@@ -602,33 +605,35 @@ const CardGenerator: React.FC = () => {
 
   // Load initial image when component mounts
   useEffect(() => {
-    const imageObj = new window.Image();
-    imageObj.src = cardConfig.imageSrc;
-    
-    imageObj.onload = () => {
-      if (imageRef.current) {
-        // Scale to fit height, just like in the original version
-        const scale = dimensions.clipGroupHeight / imageObj.height;
-        const drawHeight = dimensions.clipGroupHeight;
-        const drawWidth = imageObj.width * scale;
-        const imgX = (dimensions.clipGroupWidth - drawWidth) / 2;
-        
-        imageRef.current.image(imageObj);
-        imageRef.current.width(drawWidth);
-        imageRef.current.height(drawHeight);
-        imageRef.current.x(imgX);
-        imageRef.current.y(0); // Position at the top of the clipping area
-        
-        const layer = imageRef.current.getLayer();
-        if (layer) layer.draw();
-      }
-      setCardElementsLoaded(true);
-    };
-    
-    imageObj.onerror = () => {
-      console.error("Failed to load image:", cardConfig.imageSrc);
-      alert(`Failed to load image: ${cardConfig.imageSrc}. Make sure the file exists.`);
-    };
+    if (isBrowser) {
+      const imageObj = new window.Image();
+      imageObj.src = cardConfig.imageSrc;
+      
+      imageObj.onload = () => {
+        if (imageRef.current) {
+          // Scale to fit height, just like in the original version
+          const scale = dimensions.clipGroupHeight / imageObj.height;
+          const drawHeight = dimensions.clipGroupHeight;
+          const drawWidth = imageObj.width * scale;
+          const imgX = (dimensions.clipGroupWidth - drawWidth) / 2;
+          
+          imageRef.current.image(imageObj);
+          imageRef.current.width(drawWidth);
+          imageRef.current.height(drawHeight);
+          imageRef.current.x(imgX);
+          imageRef.current.y(0); // Position at the top of the clipping area
+          
+          const layer = imageRef.current.getLayer();
+          if (layer) layer.draw();
+        }
+        setCardElementsLoaded(true);
+      };
+      
+      imageObj.onerror = () => {
+        console.error("Failed to load image:", cardConfig.imageSrc);
+        alert(`Failed to load image: ${cardConfig.imageSrc}. Make sure the file exists.`);
+      };
+    }
   }, [cardConfig.imageSrc, dimensions.clipGroupHeight, dimensions.clipGroupWidth]);
 
   // Apply overlay effect when currentOverlay changes
